@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "--file StakeholderDocs/document-upload-and-management-feature.md" (Document Upload and Management Feature – stakeholder requirements)
 
+## Clarifications
+
+### Session 2026-10-20
+
+- Q: When a Project Manager "manages" documents in their project, which actions can they take on documents uploaded by other people? → A: Edit details, replace the file, and delete (not share/unshare).
+- Q: Who can share a document, and can shares be revoked later? → A: Only the uploader can share; they can revoke any share, and access ends immediately.
+- Q: Should opening a document in the browser preview be recorded in the activity log the same way as a download? → A: Record previews as a separate "preview" action, included in access reports.
+- Q: For document access and sharing, who counts as a Team Lead's "team"? → A: Everyone in the same department as the Team Lead (team = department).
+- Q: Which actions can Administrators take on documents they did not upload? → A: View, preview, download, edit details, replace the file and delete; sharing stays with the uploader.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Upload and view my documents (Priority: P1)
@@ -57,6 +67,7 @@ When viewing a project, team members see all documents associated with that proj
 2. **Given** a user who is not a member of Project A, **When** they attempt to open or download a Project A document (including via a direct link), **Then** access is denied.
 3. **Given** a member uploads a document to Project A, **When** the upload completes, **Then** all other Project A members receive an in-app notification.
 4. **Given** a Project Manager of Project A, **When** they delete any document in Project A after confirming, **Then** the document is permanently removed for all members.
+5. **Given** a Project Manager of Project A, **When** they edit the details of or replace the file of a document another member uploaded to Project A, **Then** the change is saved and visible to all members.
 
 ---
 
@@ -73,23 +84,25 @@ The uploader of a document updates its metadata (title, description, category, t
 1. **Given** a user who uploaded a document, **When** they change its title and tags and save, **Then** the new values appear in lists and search.
 2. **Given** a user who uploaded a document, **When** they replace the file with a new supported file, **Then** subsequent downloads return the new file and the size/type/date information is updated; the previous file is no longer available.
 3. **Given** a user who uploaded a document, **When** they choose delete and confirm, **Then** the document and its file are permanently removed and no longer appear anywhere.
-4. **Given** a user who did not upload a document and is not its project's Project Manager or an Administrator, **When** they try to edit, replace or delete it, **Then** the action is denied.
+4. **Given** a user who is not the uploader, not the Project Manager of the document's project, not a Team Lead of the uploader's team, and not an Administrator, **When** they try to edit, replace or delete it, **Then** the action is denied.
 
 ---
 
 ### User Story 5 - Share documents and "Shared with Me" (Priority: P3)
 
-A document owner shares a document with specific users or with a team. Recipients get an in-app notification and find the document in their "Shared with Me" section, where they can view and download it.
+A document's uploader shares it with specific users or with a team, and can revoke any share. Recipients get an in-app notification and find the document in their "Shared with Me" section, where they can view and download it.
 
 **Why this priority**: Replaces uncontrolled sharing via email/shared drives with controlled sharing; depends on P1.
 
-**Independent Test**: As owner, share a document with one user and with a team; as each recipient, see the notification and the document in "Shared with Me" and download it; as a non-recipient, confirm no access.
+**Independent Test**: As uploader, share a document with one user and with a team, then revoke one share; as each recipient, see the notification and the document in "Shared with Me" and download it; as a non-recipient, confirm no access.
 
 **Acceptance Scenarios**:
 
-1. **Given** a document owner, **When** they share the document with a specific user, **Then** that user receives an in-app notification and sees the document in "Shared with Me".
-2. **Given** a document owner, **When** they share with a team, **Then** every current member of that team receives a notification and can access the document.
+1. **Given** a document's uploader, **When** they share the document with a specific user, **Then** that user receives an in-app notification and sees the document in "Shared with Me".
+2. **Given** a document's uploader, **When** they share with a team, **Then** every current member of that team receives a notification and can access the document.
 3. **Given** a user who has not been shared the document and has no other access path, **When** they try to access it, **Then** access is denied.
+4. **Given** the uploader revokes a share, **When** the former recipient tries to open, preview or download the document, **Then** access is denied immediately and the document no longer appears in their "Shared with Me" (unless they have another access path).
+5. **Given** a user who is not the uploader (including recipients, Project Managers, Team Leads and Administrators), **When** they try to share the document or revoke a share, **Then** the action is denied.
 
 ---
 
@@ -126,7 +139,7 @@ When viewing a task, users see documents attached to it, attach existing documen
 
 ### User Story 8 - Audit activity and administrator reports (Priority: P4)
 
-All document activities (upload, download, delete, share) are recorded. Administrators can view reports of most uploaded document types, most active uploaders, and document access patterns.
+All document activities (upload, preview, download, delete, share, share revocation) are recorded. Administrators can view reports of most uploaded document types, most active uploaders, and document access patterns.
 
 **Why this priority**: Supports compliance and audit needs; not needed for end-user value at launch.
 
@@ -134,8 +147,8 @@ All document activities (upload, download, delete, share) are recorded. Administ
 
 **Acceptance Scenarios**:
 
-1. **Given** a user downloads a document, **When** the action completes, **Then** an activity record exists with who, what document, which action, and when.
-2. **Given** an Administrator, **When** they open document reports, **Then** they see counts by document type, top uploaders, and access counts over a selectable period.
+1. **Given** a user downloads or previews a document, **When** the action completes, **Then** an activity record exists with who, what document, which action (download or preview), and when.
+2. **Given** an Administrator, **When** they open document reports, **Then** they see counts by document type, top uploaders, and access counts over a selectable period, with previews and downloads shown separately.
 3. **Given** a non-Administrator, **When** they try to open document reports, **Then** access is denied.
 
 ---
@@ -150,7 +163,8 @@ All document activities (upload, download, delete, share) are recorded. Administ
 - Multiple files selected where some are invalid: valid files upload; invalid ones are reported individually.
 - User removed from a project: they lose access to that project's documents (unless they uploaded them or they were shared directly).
 - Project or task deleted while documents are associated: documents remain accessible to their uploader with the association cleared.
-- Shared recipient later leaves the team: team-based share access ends; direct user shares remain.
+- Shared recipient later moves to another department: team-based share access ends; direct user shares remain.
+- Share revoked while the recipient has the document open: their next preview/download attempt is denied.
 - Uploader account deactivated: documents remain available to project members and Administrators.
 - Document deleted while another user is viewing or previewing it: subsequent download/preview attempts show a "document no longer available" message.
 - Empty (0-byte) file: rejected with a clear message.
@@ -188,15 +202,16 @@ All document activities (upload, download, delete, share) are recorded. Administ
 - **FR-018**: The uploader MUST be able to edit a document's title, description, category and tags.
 - **FR-019**: The uploader MUST be able to replace a document's file with a new file subject to the same validation rules; the previous file is discarded (no version history).
 - **FR-020**: The uploader MUST be able to permanently delete their document after an explicit confirmation step.
-- **FR-021**: A Project Manager MUST be able to delete any document associated with projects they manage, after confirmation.
-- **FR-022**: Document owners MUST be able to share a document with specific users and/or with a team; recipients MUST receive an in-app notification.
+- **FR-021**: A Project Manager MUST be able to edit details (title, description, category, tags), replace the file of, and delete (after confirmation) any document associated with projects they manage. Sharing remains limited to the uploader.
+- **FR-022**: Only the uploader MUST be able to share a document with specific users and/or with a team; recipients MUST receive an in-app notification. Recipients MUST NOT be able to re-share.
+- **FR-022a**: The uploader MUST be able to revoke any share they created; the revoked recipient(s) MUST lose access immediately unless another access path applies.
 
 **Access rules**
 
 - **FR-023**: Access to a document (list, search, preview, download) MUST be granted only to: its uploader; members of its associated project; users or team members it was shared with; Team Leads for documents uploaded by members of their team; and Administrators.
 - **FR-024**: Every document operation MUST be authorized by the system regardless of how it is requested (including direct links or guessed identifiers); unauthorized requests MUST be denied without revealing whether the document exists.
-- **FR-025**: Team Leads MUST be able to view and manage (edit metadata, delete) documents uploaded by members of their team.
-- **FR-026**: Administrators MUST have full access to all documents for audit and compliance.
+- **FR-025**: A "team" is the set of users who share the same department. Team Leads MUST be able to view and manage (edit details, replace the file, delete) documents uploaded by users in their own department. Sharing "with a team" MUST grant access to all current users of the selected department.
+- **FR-026**: Administrators MUST be able to view, preview, download, edit details, replace the file of, and delete (after confirmation) any document for audit and compliance. Administrators MUST NOT share or revoke shares on documents they did not upload.
 - **FR-027**: Stored files MUST NOT be reachable except through the application's authorized access paths.
 
 **Integration**
@@ -208,8 +223,8 @@ All document activities (upload, download, delete, share) are recorded. Administ
 
 **Audit and reporting**
 
-- **FR-032**: System MUST record every upload, download, deletion and share action with the acting user, document, action type and timestamp.
-- **FR-033**: Administrators MUST be able to view reports of most uploaded document types, most active uploaders and document access patterns over a selectable time period; non-Administrators MUST NOT.
+- **FR-032**: System MUST record every upload, preview, download, deletion, share and share revocation with the acting user, document, action type and timestamp. Previews MUST be recorded as a distinct action from downloads.
+- **FR-033**: Administrators MUST be able to view reports of most uploaded document types, most active uploaders and document access patterns (previews and downloads, reported separately and combined) over a selectable time period; non-Administrators MUST NOT.
 
 **Environment**
 
@@ -219,10 +234,10 @@ All document activities (upload, download, delete, share) are recorded. Administ
 
 - **Document**: A stored work file and its metadata — identifier, title, optional description, category, tags, original file name, file type, file size, storage location (system-generated, unique), upload date/time, uploader, optional associated project, last modified date.
 - **Document Tag**: Free-text label attached to a document to aid search; a document may have many tags.
-- **Document Share**: Grant of access from a document owner to a specific user or a team; records document, recipient (user or team), who shared, and when.
+- **Document Share**: Grant of access from the uploader to a specific user or a team; records document, recipient (user or team), who shared, and when. Revoking a share removes the grant.
 - **Task Document Attachment**: Link between a task and a document; attaching implies association with the task's project.
-- **Document Activity Record**: Audit entry — acting user, document, action (upload, download, delete, share, replace, metadata edit), timestamp.
-- **Existing entities referenced**: User (role, department/team), Project and Project Member, Task, Notification.
+- **Document Activity Record**: Audit entry — acting user, document, action (upload, preview, download, delete, share, revoke share, replace, metadata edit), timestamp.
+- **Existing entities referenced**: User (role, department — department defines the user's team), Project and Project Member, Task, Notification.
 
 ## Success Criteria *(mandatory)*
 
@@ -241,10 +256,10 @@ All document activities (upload, download, delete, share) are recorded. Administ
 
 ## Assumptions
 
-- "Team" means the users sharing the same department; a Team Lead's team is the members of their department.
+- Users without a department belong to no team: they cannot receive team shares and have no Team Lead oversight.
 - When multiple files are selected at once, title defaults to each file's name (editable per file) and category, project, description and tags entered apply to all files in the batch.
 - Employees may upload to any project they are a member of; Project Managers may upload to projects they manage.
-- Edit metadata and replace file are limited to the uploader, Team Leads (for their team's documents) and Administrators; Project Managers may delete but not edit others' documents in their projects.
+- Edit details, replace file and delete are limited to the uploader, the Project Manager of the document's project, Team Leads (for their team's documents) and Administrators.
 - Replacing a file does not keep the previous version (version history is out of scope).
 - The dashboard document count reflects documents uploaded by the user.
 - Preview is required only for PDF, JPEG and PNG; other types are download-only.
