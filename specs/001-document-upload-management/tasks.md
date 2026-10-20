@@ -30,9 +30,9 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
 
 **Purpose**: Configuration and repository hygiene
 
-- [ ] T001 Add `ContosoDashboard/AppData/` to `.gitignore` so uploaded files are never committed (research R13)
-- [ ] T002 [P] Add a `"FileStorage": { "RootPath": "AppData/uploads" }` section to `ContosoDashboard/appsettings.json` (relative to content root, outside `wwwroot`, research R3)
-- [ ] T003 [P] Create `ContosoDashboard/Models/DocumentCategories.cs` with a static class exposing `public static readonly IReadOnlyList<string> All` = "Project Documents", "Team Resources", "Personal Files", "Reports", "Presentations", "Other", plus `IsValid(string)` (text values, not an enum, per Constitution IV)
+- [X] T001 Add `ContosoDashboard/AppData/` to `.gitignore` so uploaded files are never committed (research R13)
+- [X] T002 [P] Add a `"FileStorage": { "RootPath": "AppData/uploads" }` section to `ContosoDashboard/appsettings.json` (relative to content root, outside `wwwroot`, research R3)
+- [X] T003 [P] Create `ContosoDashboard/Models/DocumentCategories.cs` with a static class exposing `public static readonly IReadOnlyList<string> All` = "Project Documents", "Team Resources", "Personal Files", "Reports", "Presentations", "Other", plus `IsValid(string)` (text values, not an enum, per Constitution IV)
 
 ---
 
@@ -44,16 +44,16 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
 
 ### Entities (data-model.md)
 
-- [ ] T004 [P] Create `ContosoDashboard/Models/Document.cs`: `DocumentId` int PK identity; `Title` [Required][MaxLength(255)] "Required, trimmed, non-empty"; `Description` [MaxLength(2000)] nullable; `Category` [Required][MaxLength(50)] "one of `DocumentCategories.All`"; `OriginalFileName` [Required][MaxLength(255)] "display/download name only (never used in paths)"; `FileType` [Required][MaxLength(255)] "MIME type derived server-side from extension"; `FileExtension` [Required][MaxLength(10)] "lower-case, from allow-list"; `FileSizeBytes` long "1 … 26,214,400"; `StoragePath` [Required][MaxLength(500)] "unique; `{uploaderId}/{projectId|personal}/{guid}{ext}`; generated before file write"; `UploadedByUserId` int FK → User; `ProjectId` int? FK → Project; `UploadedDate`, `LastModifiedDate` DateTime UTC; navigations `UploadedByUser`, `Project`, `Tags`, `Shares`, `TaskLinks`
-- [ ] T005 [P] Create `ContosoDashboard/Models/DocumentTag.cs`: `DocumentTagId` int PK; `DocumentId` int FK → Document; `Tag` [Required][MaxLength(50)] "Required, trimmed, stored lower-case; max 10 per document; unique per (DocumentId, Tag)"; navigation `Document`
-- [ ] T006 [P] Create `ContosoDashboard/Models/DocumentShare.cs`: `DocumentShareId` int PK; `DocumentId` int FK; `SharedWithUserId` int? FK → User; `SharedWithDepartment` [MaxLength(100)] nullable "Exactly one of SharedWithUserId / SharedWithDepartment is set"; `SharedByUserId` int FK → User "Must equal Document.UploadedByUserId"; `SharedDate` DateTime UTC; navigations `Document`, `SharedWithUser`, `SharedByUser`
-- [ ] T007 [P] Create `ContosoDashboard/Models/TaskDocument.cs`: `TaskDocumentId` int PK; `TaskId` int FK → TaskItem; `DocumentId` int FK → Document; `AttachedByUserId` int FK → User; `AttachedDate` DateTime UTC; navigations `Task`, `Document`, `AttachedByUser`
-- [ ] T008 [P] Create `ContosoDashboard/Models/DocumentActivity.cs`: `DocumentActivityId` int PK; `DocumentId` int "**No FK** (records survive deletion)"; `DocumentTitle` [MaxLength(255)] snapshot; `FileType` [MaxLength(255)] snapshot; `ActorUserId` int FK → User; `Action` [Required][MaxLength(30)]; `Details` [MaxLength(500)] nullable; `OccurredAt` DateTime UTC. In the same file add static class `DocumentActions` with string constants: Upload, Preview, Download, MetadataEdit, Replace, Delete, Share, RevokeShare, AttachToTask, ScanRejected
-- [ ] T009 [P] Append `DocumentShared` and `DocumentAdded` to the end of the `NotificationType` enum in `ContosoDashboard/Models/Notification.cs` (append-only, so existing stored values stay the same)
+- [X] T004 [P] Create `ContosoDashboard/Models/Document.cs`: `DocumentId` int PK identity; `Title` [Required][MaxLength(255)] "Required, trimmed, non-empty"; `Description` [MaxLength(2000)] nullable; `Category` [Required][MaxLength(50)] "one of `DocumentCategories.All`"; `OriginalFileName` [Required][MaxLength(255)] "display/download name only (never used in paths)"; `FileType` [Required][MaxLength(255)] "MIME type derived server-side from extension"; `FileExtension` [Required][MaxLength(10)] "lower-case, from allow-list"; `FileSizeBytes` long "1 … 26,214,400"; `StoragePath` [Required][MaxLength(500)] "unique; `{uploaderId}/{projectId|personal}/{guid}{ext}`; generated before file write"; `UploadedByUserId` int FK → User; `ProjectId` int? FK → Project; `UploadedDate`, `LastModifiedDate` DateTime UTC; navigations `UploadedByUser`, `Project`, `Tags`, `Shares`, `TaskLinks`
+- [X] T005 [P] Create `ContosoDashboard/Models/DocumentTag.cs`: `DocumentTagId` int PK; `DocumentId` int FK → Document; `Tag` [Required][MaxLength(50)] "Required, trimmed, stored lower-case; max 10 per document; unique per (DocumentId, Tag)"; navigation `Document`
+- [X] T006 [P] Create `ContosoDashboard/Models/DocumentShare.cs`: `DocumentShareId` int PK; `DocumentId` int FK; `SharedWithUserId` int? FK → User; `SharedWithDepartment` [MaxLength(100)] nullable "Exactly one of SharedWithUserId / SharedWithDepartment is set"; `SharedByUserId` int FK → User "Must equal Document.UploadedByUserId"; `SharedDate` DateTime UTC; navigations `Document`, `SharedWithUser`, `SharedByUser`
+- [X] T007 [P] Create `ContosoDashboard/Models/TaskDocument.cs`: `TaskDocumentId` int PK; `TaskId` int FK → TaskItem; `DocumentId` int FK → Document; `AttachedByUserId` int FK → User; `AttachedDate` DateTime UTC; navigations `Task`, `Document`, `AttachedByUser`
+- [X] T008 [P] Create `ContosoDashboard/Models/DocumentActivity.cs`: `DocumentActivityId` int PK; `DocumentId` int "**No FK** (records survive deletion)"; `DocumentTitle` [MaxLength(255)] snapshot; `FileType` [MaxLength(255)] snapshot; `ActorUserId` int FK → User; `Action` [Required][MaxLength(30)]; `Details` [MaxLength(500)] nullable; `OccurredAt` DateTime UTC. In the same file add static class `DocumentActions` with string constants: Upload, Preview, Download, MetadataEdit, Replace, Delete, Share, RevokeShare, AttachToTask, ScanRejected
+- [X] T009 [P] Append `DocumentShared` and `DocumentAdded` to the end of the `NotificationType` enum in `ContosoDashboard/Models/Notification.cs` (append-only, so existing stored values stay the same)
 
 ### Schema
 
-- [ ] T010 Update `ContosoDashboard/Data/ApplicationDbContext.cs` (depends on T004–T009):
+- [X] T010 Update `ContosoDashboard/Data/ApplicationDbContext.cs` (depends on T004–T009):
   - Add `DbSet`s `Documents`, `DocumentTags`, `DocumentShares`, `TaskDocuments`, `DocumentActivities`.
   - Configure delete behaviors:
     - Document→User: Restrict
@@ -74,14 +74,14 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
 
 ### Infrastructure abstractions (Constitution I)
 
-- [ ] T011 [P] Create `ContosoDashboard/Services/IFileStorageService.cs` exactly per [contracts/services.md](contracts/services.md): `UploadAsync(Stream content, string storagePath, string contentType, CancellationToken ct = default)`, `DownloadAsync(string storagePath, CancellationToken ct = default)` (throws `FileNotFoundException` if missing), `DeleteAsync(string storagePath, CancellationToken ct = default)` (no-op if missing)
-- [ ] T012 Create `ContosoDashboard/Services/LocalFileStorageService.cs` implementing `IFileStorageService` (depends on T002, T011):
+- [X] T011 [P] Create `ContosoDashboard/Services/IFileStorageService.cs` exactly per [contracts/services.md](contracts/services.md): `UploadAsync(Stream content, string storagePath, string contentType, CancellationToken ct = default)`, `DownloadAsync(string storagePath, CancellationToken ct = default)` (throws `FileNotFoundException` if missing), `DeleteAsync(string storagePath, CancellationToken ct = default)` (no-op if missing)
+- [X] T012 Create `ContosoDashboard/Services/LocalFileStorageService.cs` implementing `IFileStorageService` (depends on T002, T011):
   - Resolve the root from `FileStorage:RootPath` combined with `IWebHostEnvironment.ContentRootPath`.
   - Create directories on demand.
   - Map forward-slash `storagePath` to the OS path.
   - **Reject any resolved full path outside the root** with `Path.GetFullPath` plus a prefix check.
   - Use `System.IO` only.
-- [ ] T013 [P] Create `ContosoDashboard/Services/DocumentFileRules.cs` (research R6):
+- [X] T013 [P] Create `ContosoDashboard/Services/DocumentFileRules.cs` (research R6):
   - `MaxFileSizeBytes = 25 * 1024 * 1024`.
   - Allow-list map from extension to MIME type and magic bytes:
     - `.pdf` → application/pdf, `%PDF-`
@@ -91,8 +91,8 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
     - `.jpg`/`.jpeg` → image/jpeg, `FF D8 FF`
     - `.png` → image/png, `89 50 4E 47 0D 0A 1A 0A`
   - Helpers: `TryGetMimeType(extension)`, `IsPreviewable(mime)` (pdf/jpeg/png only), `NormalizeExtension(fileName)`.
-- [ ] T014 [P] Create `ContosoDashboard/Services/IMalwareScanner.cs` with `Task<ScanResult> ScanAsync(Stream content, string fileExtension, CancellationToken ct = default)` and `public sealed record ScanResult(bool IsClean, string? Reason)`
-- [ ] T015 Create `ContosoDashboard/Services/LocalMalwareScanner.cs` implementing `IMalwareScanner` (depends on T013, T014):
+- [X] T014 [P] Create `ContosoDashboard/Services/IMalwareScanner.cs` with `Task<ScanResult> ScanAsync(Stream content, string fileExtension, CancellationToken ct = default)` and `public sealed record ScanResult(bool IsClean, string? Reason)`
+- [X] T015 Create `ContosoDashboard/Services/LocalMalwareScanner.cs` implementing `IMalwareScanner` (depends on T013, T014):
   - Verify the file signature for the extension using `DocumentFileRules`.
   - Search the content for the EICAR test string `X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`.
   - Return `IsClean=false` with a reason if either check fails.
@@ -100,11 +100,11 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
 
 ### Identity
 
-- [ ] T016 [P] Add `new Claim("Department", user.Department ?? string.Empty)` to the claims list in `ContosoDashboard/Pages/Login.cshtml.cs` (Constitution II: all claims including Department)
+- [X] T016 [P] Add `new Claim("Department", user.Department ?? string.Empty)` to the claims list in `ContosoDashboard/Pages/Login.cshtml.cs` (Constitution II: all claims including Department)
 
 ### Document service core (authorization single source of truth — research R7)
 
-- [ ] T017 Create `ContosoDashboard/Services/DocumentService.cs` with the `IDocumentService` interface and `DocumentService` class (depends on T010–T015):
+- [X] T017 Create the MVP `IDocumentService` interface and `DocumentService` access filter in `ContosoDashboard/Services/DocumentService.cs`; later user-story tasks extend it with their methods (depends on T010–T015):
   - Add the DTOs from [contracts/services.md](contracts/services.md): `DocumentUploadRequest`, `DocumentUploadResult`, `DocumentQuery` (plus a `DocumentSortBy` enum: Title, UploadedDate, Category, FileSize), `DocumentListItem`, `DocumentDetails`, `DocumentMetadataUpdate`, `DocumentFileResult`, `DocumentShareItem`, `OperationResult` with the generic message "Document not found or you do not have access.".
   - Inject `ApplicationDbContext`, `IFileStorageService`, `IMalwareScanner`, `INotificationService`, `ILogger<DocumentService>`.
   - Private helpers:
@@ -117,8 +117,8 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
     - `AddActivity(doc, actorId, action, details)` adds a `DocumentActivity` without saving.
     - `ToListItem` projection fills `CanPreview`, `CanManage`, `CanShare`.
     - `NormalizeTags(IEnumerable<string>)` trims, lower-cases, de-duplicates, keeps at most 10 tags, and rejects any tag over 50 characters.
-- [ ] T018 Register services in `ContosoDashboard/Program.cs` after the existing registrations: `AddScoped<IDocumentService, DocumentService>()`, `AddSingleton<IFileStorageService, LocalFileStorageService>()`, `AddSingleton<IMalwareScanner, LocalMalwareScanner>()`. Do NOT modify the security-header middleware (depends on T012, T015, T017)
-- [ ] T019 Delete `ContosoDashboard/ContosoDashboard.db`, run `dotnet build ContosoDashboard/ContosoDashboard.csproj` (must succeed, no new warnings), start the app and confirm the schema is created and all 5 seed users can log in
+- [X] T018 Register services in `ContosoDashboard/Program.cs` after the existing registrations: `AddScoped<IDocumentService, DocumentService>()`, `AddSingleton<IFileStorageService, LocalFileStorageService>()`, `AddSingleton<IMalwareScanner, LocalMalwareScanner>()`. Do NOT modify the security-header middleware (depends on T012, T015, T017)
+- [X] T019 Validate on a fresh isolated smoke database (original `ContosoDashboard.db` preserved): build succeeds, `EnsureCreated` creates the document schema, the login page offers all five seed users, and `/documents` loads
 
 **Checkpoint**: Foundation ready. Schema, abstractions and authorization core exist, and user story work can begin.
 
@@ -130,8 +130,8 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
 
 **Independent Test**: As Ni Kang, upload a PDF and a PNG with title, category, project and tags. Confirm both are listed with the correct metadata and download unchanged. Confirm that oversize, empty, unsupported and signature-mismatch files are rejected with nothing left on disk (quickstart scenario 1).
 
-- [ ] T020 [US1] Implement `GetUploadableProjectsAsync(requestingUserId)` in `ContosoDashboard/Services/DocumentService.cs`: projects where the user is PM or a member (FR-008)
-- [ ] T021 [US1] Implement `UploadAsync(request, content, requestingUserId)` in `ContosoDashboard/Services/DocumentService.cs`, strictly in this order (research R4):
+- [X] T020 [US1] Implement `GetUploadableProjectsAsync(requestingUserId)` in `ContosoDashboard/Services/DocumentService.cs`: projects where the user is PM or a member (FR-008)
+- [X] T021 [US1] Implement `UploadAsync(request, content, requestingUserId)` in `ContosoDashboard/Services/DocumentService.cs`, strictly in this order (research R4):
   1. Validate size: 0 < size ≤ 25 MB. Use the messages "File is empty." / "File exceeds the 25 MB limit.".
   2. Validate the extension against the allow-list. Message: "Unsupported file type. Allowed: PDF, Word, Excel, PowerPoint, text, JPEG, PNG.".
   3. Validate that Title is non-empty and Category is valid.
@@ -144,32 +144,32 @@ Single ASP.NET Core project: `ContosoDashboard/Models/`, `ContosoDashboard/Data/
   10. If the save fails, delete the written file (best effort, log a warning) and return an error.
 
   Set `FileType` from `DocumentFileRules` (never the browser value), and set UTC dates.
-- [ ] T022 [US1] Implement `GetMyDocumentsAsync(requestingUserId, query)` in `ContosoDashboard/Services/DocumentService.cs` returning the user's own uploads, newest first, as `DocumentListItem` with `AsNoTracking()` (sorting and filtering are added in US2)
-- [ ] T023 [US1] Implement `OpenFileAsync(documentId, requestingUserId, preview)` download path in `ContosoDashboard/Services/DocumentService.cs`:
+- [X] T022 [US1] Implement `GetMyDocumentsAsync(requestingUserId)` in `ContosoDashboard/Services/DocumentService.cs` returning the user's own uploads, newest first, as `DocumentListItem` with `AsNoTracking()` (sorting and filtering are added in US2)
+- [X] T023 [US1] Implement `OpenFileAsync(documentId, requestingUserId, preview)` download path in `ContosoDashboard/Services/DocumentService.cs`:
   - Apply the `AccessibleDocuments` filter. Return `null` if the document is not found, not permitted, or its file is missing.
   - Open the stream with `IFileStorageService.DownloadAsync`.
   - Log a `Download` activity and save.
   - Return `DocumentFileResult` with `Inline=false` and `DownloadFileName=OriginalFileName`.
-- [ ] T024 [US1] Create `ContosoDashboard/Pages/DocumentFile.cshtml` (`@page "/documents/{documentId:int}/file"`) and `ContosoDashboard/Pages/DocumentFile.cshtml.cs` (`[Authorize]` PageModel):
+- [X] T024 [US1] Create `ContosoDashboard/Pages/DocumentFile.cshtml` (`@page "/documents/{documentId:int}/file"`) and `ContosoDashboard/Pages/DocumentFile.cshtml.cs` (`[Authorize]` PageModel):
   - Read the user id from `ClaimTypes.NameIdentifier`.
   - Call `OpenFileAsync`. Return `NotFound()` when the result is null (identical for missing and denied, FR-024).
   - Otherwise return `File(stream, contentType, downloadFileName)` with `Cache-Control: no-store`.
   - GET only.
-- [ ] T025 [P] [US1] Create `ContosoDashboard/Shared/DocumentTable.razor`:
+- [X] T025 [P] [US1] Create `ContosoDashboard/Shared/DocumentTable.razor`:
   - Parameters: `Items` (`List<DocumentListItem>`), `ShowUploader`, and `EventCallback`s for later actions.
   - Columns: title, category, upload date, human-readable size, file type, project, uploader.
   - Download link to `/documents/{id}/file`.
   - Empty-state row "No documents found.".
-- [ ] T026 [P] [US1] Create `ContosoDashboard/Shared/DocumentUploadDialog.razor` (research R5):
+- [X] T026 [P] [US1] Create `ContosoDashboard/Shared/DocumentUploadDialog.razor` (research R5):
   - Parameters: `ProjectId?`, `TaskId?`, `OnUploaded`. Inject `IDocumentService` and `AuthenticationStateProvider`.
   - `<InputFile multiple @key="inputKey">`. Per file, capture name, size and content type **before** opening the stream, and pre-reject files over 25 MB or 0 bytes.
   - Title defaults to the file name (editable per file). Required category select from `DocumentCategories.All`. Optional project select from `GetUploadableProjectsAsync` (fixed when `ProjectId` is supplied). Optional description and comma-separated tags shared by the batch.
   - Copy each file with `OpenReadStream(DocumentFileRules.MaxFileSizeBytes)` into a `MemoryStream` in 64 KB chunks, updating the per-file percentage and calling `StateHasChanged()`. Reset position, set the `IBrowserFile` reference to null, then call `UploadAsync`.
   - Show a per-file success ("Uploaded '{title}'.") or error message. Bump `inputKey` after the batch.
   - Validation messages for a missing title or category, without starting the upload.
-- [ ] T027 [US1] Create `ContosoDashboard/Pages/Documents.razor` (`@page "/documents"`, `@attribute [Authorize]`, injects `IDocumentService` and `AuthenticationStateProvider`): "My Documents" heading, Upload button opening `DocumentUploadDialog`, `DocumentTable` bound to `GetMyDocumentsAsync`, list refreshed on `OnUploaded` (depends on T022, T025, T026)
-- [ ] T028 [P] [US1] Add a "Documents" nav link (`href="documents"`, Bootstrap icon `bi-file-earmark-text`) to `ContosoDashboard/Shared/NavMenu.razor`
-- [ ] T029 [US1] Delete `ContosoDashboard/ContosoDashboard.db`, build, run and execute [quickstart.md](quickstart.md) scenario 1 (steps 1–7), including that `ContosoDashboard/AppData/uploads/4/1/` holds only GUID-named files, one per successful upload
+- [X] T027 [US1] Create `ContosoDashboard/Pages/Documents.razor` (`@page "/documents"`, `@attribute [Authorize]`, injects `IDocumentService` and `AuthenticationStateProvider`): "My Documents" heading, Upload button opening `DocumentUploadDialog`, `DocumentTable` bound to `GetMyDocumentsAsync`, list refreshed on `OnUploaded` (depends on T022, T025, T026)
+- [X] T028 [P] [US1] Add a "Documents" nav link (`href="documents"`, Bootstrap icon `bi-file-earmark-text`) to `ContosoDashboard/Shared/NavMenu.razor`
+- [X] T029 [US1] Validate MVP upload/list/download, expected per-file rejection messages (empty, oversize, unsupported extension, signature mismatch), and cross-department direct-file denial using an isolated smoke database; verify successful file bytes and no rejected rows while preserving the existing `ContosoDashboard.db`
 
 **Checkpoint**: MVP. Upload, list and secure download work independently.
 

@@ -1,0 +1,69 @@
+@using ContosoDashboard.Services
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Category</th>
+                <th scope="col">Uploaded</th>
+                <th scope="col">Size</th>
+                <th scope="col">File type</th>
+                <th scope="col">Project</th>
+                <th scope="col">Uploaded by</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">No documents found.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Items)
+                {
+                    <tr>
+                        <td>@item.Title</td>
+                        <td>@item.Category</td>
+                        <td>@item.UploadedDate.ToLocalTime().ToString("MMM d, yyyy")</td>
+                        <td>@FormatSize(item.FileSizeBytes)</td>
+                        <td>@item.FileType</td>
+                        <td>@(item.ProjectName ?? "Personal")</td>
+                        <td>@item.UploadedByName</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="/documents/@item.DocumentId/file" aria-label="Download @item.Title" title="Download">
+                                <span class="bi bi-download" aria-hidden="true"></span>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public List<DocumentListItem> Items { get; set; } = [];
+
+    [Parameter]
+    public bool ShowUploader { get; set; }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        if (bytes < 1_048_576)
+        {
+            return $"{bytes / 1024d:0.#} KB";
+        }
+
+        return $"{bytes / 1_048_576d:0.#} MB";
+    }
+}

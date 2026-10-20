@@ -1,0 +1,278 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using ContosoDashboard.Models
+@using ContosoDashboard.Services
+
+@if (IsOpen)
+{
+    <div class="modal d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="uploadTitle" style="background: rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="uploadTitle">Upload documents</h2>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseAsync"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="documentFiles">Files</label>
+                        <InputFile id="documentFiles" @key="inputKey" OnChange="SelectFiles" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" class="form-control" />
+                        <div class="form-text">PDF, Office documents, text, JPEG and PNG; up to 25 MB per file.</div>
+                    </div>
+
+                    @if (files.Count > 0)
+                    {
+                        @foreach (var entry in files)
+                        {
+                            <div class="border-bottom py-3" @key="entry.Id">
+                                <div class="d-flex justify-content-between gap-3 mb-2">
+                                    <strong class="text-truncate">@entry.OriginalName</strong>
+                                    <span class="small text-muted">@FormatSize(entry.Size)</span>
+                                </div>
+                                <label class="form-label" for="title-@entry.Id">Title <span class="text-danger">*</span></label>
+                                <input id="title-@entry.Id" class="form-control mb-2" maxlength="255" @bind="entry.Title" />
+                                @if (entry.Progress > 0 && entry.Progress < 100)
+                                {
+                                    <div class="progress mb-2" role="progressbar" aria-valuenow="@entry.Progress" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar" style="width: @entry.Progress%">@entry.Progress%</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(entry.ResultMessage))
+                                {
+                                    <div class="small @(entry.Succeeded ? "text-success" : "text-danger")" role="status">@entry.ResultMessage</div>
+                                }
+                            </div>
+                        }
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label class="form-label" for="documentCategory">Category <span class="text-danger">*</span></label>
+                                <select id="documentCategory" class="form-select" @bind="category">
+                                    <option value="">Select category</option>
+                                    @foreach (var option in DocumentCategories.All)
+                                    {
+                                        <option value="@option">@option</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="documentProject">Project</label>
+                                <select id="documentProject" class="form-select" @bind="projectId" disabled="@(ProjectId.HasValue)">
+                                    <option value="">Personal file</option>
+                                    @foreach (var project in uploadableProjects)
+                                    {
+                                        <option value="@project.ProjectId">@project.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="documentDescription">Description</label>
+                                <textarea id="documentDescription" class="form-control" rows="2" maxlength="2000" @bind="description"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="documentTags">Tags</label>
+                                <input id="documentTags" class="form-control" maxlength="510" @bind="tagsText" placeholder="Separate tags with commas" />
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(formError))
+                    {
+                        <div class="alert alert-danger mt-3 mb-0" role="alert">@formError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseAsync" disabled="@isUploading">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="UploadAsync" disabled="@(isUploading || files.Count == 0)">
+                        @if (isUploading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                            <span>Uploading</span>
+                        }
+                        else
+                        {
+                            <span class="bi bi-upload me-1" aria-hidden="true"></span>
+                            <span>Upload</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public int? ProjectId { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnUploaded { get; set; }
+
+    [Inject]
+    private IDocumentService DocumentService { get; set; } = null!;
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private readonly List<UploadEntry> files = [];
+    private List<Project> uploadableProjects = [];
+    private string category = string.Empty;
+    private string? description;
+    private string tagsText = string.Empty;
+    private string? formError;
+    private int? projectId;
+    private int inputKey;
+    private bool isUploading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen)
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (int.TryParse(authState.User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            {
+                uploadableProjects = await DocumentService.GetUploadableProjectsAsync(userId);
+            }
+
+            projectId = ProjectId;
+        }
+    }
+
+    private Task SelectFiles(InputFileChangeEventArgs args)
+    {
+        files.Clear();
+        formError = null;
+        foreach (var browserFile in args.GetMultipleFiles(20))
+        {
+            var entry = new UploadEntry(browserFile);
+            if (browserFile.Size == 0)
+            {
+                entry.ResultMessage = "File is empty.";
+            }
+            else if (browserFile.Size > DocumentFileRules.MaxFileSizeBytes)
+            {
+                entry.ResultMessage = "File exceeds the 25 MB limit.";
+            }
+
+            files.Add(entry);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task UploadAsync()
+    {
+        formError = null;
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            formError = "Select a category before uploading.";
+            return;
+        }
+
+        if (files.Any(file => string.IsNullOrWhiteSpace(file.Title)))
+        {
+            formError = "Enter a title for each file before uploading.";
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!int.TryParse(authState.User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            formError = "Your session has expired. Sign in and try again.";
+            return;
+        }
+
+        isUploading = true;
+        try
+        {
+            foreach (var entry in files.Where(file => file.BrowserFile is not null && string.IsNullOrEmpty(file.ResultMessage)))
+            {
+                var selectedFile = entry.BrowserFile!;
+                var fileName = selectedFile.Name;
+                var fileSize = selectedFile.Size;
+                var contentType = selectedFile.ContentType;
+                _ = contentType;
+
+                using var memoryStream = new MemoryStream();
+                await using (var source = selectedFile.OpenReadStream(DocumentFileRules.MaxFileSizeBytes))
+                {
+                    var buffer = new byte[64 * 1024];
+                    int bytesRead;
+                    long totalRead = 0;
+                    while ((bytesRead = await source.ReadAsync(buffer)) > 0)
+                    {
+                        await memoryStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                        totalRead += bytesRead;
+                        entry.Progress = (int)(totalRead * 100 / fileSize);
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+
+                memoryStream.Position = 0;
+                entry.BrowserFile = null;
+                var request = new DocumentUploadRequest(
+                    entry.Title.Trim(),
+                    description,
+                    category,
+                    projectId,
+                    tagsText.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                    fileName,
+                    fileSize);
+                var result = await DocumentService.UploadAsync(request, memoryStream, userId);
+                entry.Succeeded = result.Succeeded;
+                entry.Progress = result.Succeeded ? 100 : 0;
+                entry.ResultMessage = result.Succeeded
+                    ? $"Uploaded '{entry.Title}'."
+                    : result.ErrorMessage;
+                if (result.Succeeded)
+                {
+                    await OnUploaded.InvokeAsync();
+                }
+            }
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        {
+            formError = exception.Message;
+        }
+        finally
+        {
+            isUploading = false;
+            inputKey++;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (!isUploading)
+        {
+            files.Clear();
+            category = string.Empty;
+            description = null;
+            tagsText = string.Empty;
+            formError = null;
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private static string FormatSize(long bytes) => bytes < 1_048_576
+        ? $"{bytes / 1024d:0.#} KB"
+        : $"{bytes / 1_048_576d:0.#} MB";
+
+    private sealed class UploadEntry(IBrowserFile browserFile)
+    {
+        public Guid Id { get; } = Guid.NewGuid();
+        public IBrowserFile? BrowserFile { get; set; } = browserFile;
+        public string OriginalName { get; } = browserFile.Name;
+        public long Size { get; } = browserFile.Size;
+        public string Title { get; set; } = Path.GetFileNameWithoutExtension(browserFile.Name);
+        public int Progress { get; set; }
+        public bool Succeeded { get; set; }
+        public string? ResultMessage { get; set; }
+    }
+}
